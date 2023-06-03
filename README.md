@@ -1,1 +1,3 @@
-# astro_airflow
+# Astronomer - Airflow
+
+Airflow Fundamentals Preparation Course
