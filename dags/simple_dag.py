@@ -1,6 +1,7 @@
 from airflow import DAG
 from airflow.operators.dummy import DummyOperator
 from airflow.operators.python import PythonOperator
+from airflow.operators.bash import BashOperator
 from airflow.sensors.filesystem import FileSensor
 from airflow.utils.dates import days_ago
 from datetime import datetime, timedelta
@@ -35,3 +36,12 @@ with DAG(dag_id='simple_dag', schedule_interval="@daily",
         filepath='my_file.txt',
         # poke_interval=15
     )
+
+    processing_data = BashOperator(
+        task_id='processing_data',
+        bash_command='exit 0',
+    )
+
+    # downloading_data.set_downstream(waiting_for_data)
+    # waiting_for_data.set_downstream(processing_data)
+    downloading_data >> waiting_for_data >> processing_data
