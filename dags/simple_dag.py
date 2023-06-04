@@ -9,27 +9,27 @@ from datetime import datetime, timedelta
 
 default_args = {
     'retry': 5,
-    'retry_delay': timedelta(minutes=5)
+    'retry_delay': timedelta(minutes=5),
+    'email_on_failure':True,
+    'email_on_retry':True,
+    'email':'admin@admin.com'
 }
 
 def _downloading_data(ti, **kwargs):
     with open('/tmp/my_file.txt', 'w') as f:
         f.write('my_data')
     ti.xcom_push(key='my_key',value=43)
-    # return 42
-
-# def _downloading_data(**kwargs):
-#     print(kwargs)
-
-# def _downloading_data(my_param, ds):
-#     print(my_param)
 
 def _checking_data(ti):
     my_xcom = ti.xcom_pull(key='my_key', task_ids=['downloading_data'])
     print(my_xcom)
 
-with DAG(dag_id='simple_dag', schedule_interval="@daily", 
-        start_date=days_ago(3), catchup=False) as dag:
+def _failure(context):
+    print("On callback failure")
+    print(context)
+
+with DAG(dag_id='simple_dag', default_args=default_args, schedule_interval="@daily", 
+        start_date=days_ago(3), catchup=True) as dag:
 
     downloading_data = PythonOperator(
         task_id='downloading_data',
@@ -51,7 +51,8 @@ with DAG(dag_id='simple_dag', schedule_interval="@daily",
 
     processing_data = BashOperator(
         task_id='processing_data',
-        bash_command='exit 0',
+        bash_command='exit 1',
+        on_failure_callback=_failure
     )
 
     # downloading_data.set_downstream(waiting_for_data)
