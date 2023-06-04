@@ -8,7 +8,7 @@ from airflow.utils.dates import days_ago
 from datetime import datetime, timedelta
 
 default_args = {
-    'retry': 5,
+    'retries': 5,
     'retry_delay': timedelta(minutes=5),
     'email_on_failure':True,
     'email_on_retry':True,
@@ -51,7 +51,7 @@ with DAG(dag_id='simple_dag', default_args=default_args, schedule_interval="@dai
 
     processing_data = BashOperator(
         task_id='processing_data',
-        bash_command='exit 1',
+        bash_command='exit 0',
         on_failure_callback=_failure
     )
 
