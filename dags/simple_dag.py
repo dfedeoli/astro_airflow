@@ -12,10 +12,11 @@ default_args = {
     'retry_delay': timedelta(minutes=5)
 }
 
-def _downloading_data(**kwargs):
+def _downloading_data(ti, **kwargs):
     with open('/tmp/my_file.txt', 'w') as f:
         f.write('my_data')
-    return 42
+    ti.xcom_push(key='my_key',value=43)
+    # return 42
 
 # def _downloading_data(**kwargs):
 #     print(kwargs)
@@ -24,7 +25,7 @@ def _downloading_data(**kwargs):
 #     print(my_param)
 
 def _checking_data(ti):
-    my_xcom = ti.xcom_pull(key='return_value', task_ids=['downloading_data'])
+    my_xcom = ti.xcom_pull(key='my_key', task_ids=['downloading_data'])
     print(my_xcom)
 
 with DAG(dag_id='simple_dag', schedule_interval="@daily", 
