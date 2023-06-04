@@ -15,6 +15,7 @@ default_args = {
 def _downloading_data(**kwargs):
     with open('/tmp/my_file.txt', 'w') as f:
         f.write('my_data')
+    return 42
 
 # def _downloading_data(**kwargs):
 #     print(kwargs)
@@ -22,8 +23,9 @@ def _downloading_data(**kwargs):
 # def _downloading_data(my_param, ds):
 #     print(my_param)
 
-def _checking_data():
-    print('check data')
+def _checking_data(ti):
+    my_xcom = ti.xcom_pull(key='return_value', task_ids=['downloading_data'])
+    print(my_xcom)
 
 with DAG(dag_id='simple_dag', schedule_interval="@daily", 
         start_date=days_ago(3), catchup=False) as dag:
@@ -55,5 +57,5 @@ with DAG(dag_id='simple_dag', schedule_interval="@daily",
     # waiting_for_data.set_downstream(processing_data)
     # downloading_data >> waiting_for_data >> processing_data
     # downloading_data >> [waiting_for_data, processing_data]
-    chain(downloading_data, waiting_for_data, processing_data)
+    chain(downloading_data, checking_data, waiting_for_data, processing_data)
     # cross_downstream([downloading_data, checking_data],[waiting_for_data, processing_data])
