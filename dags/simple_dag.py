@@ -3,6 +3,7 @@ from airflow.operators.dummy import DummyOperator
 from airflow.operators.python import PythonOperator
 from airflow.operators.bash import BashOperator
 from airflow.sensors.filesystem import FileSensor
+from airflow.models.baseoperator import chain, cross_downstream
 from airflow.utils.dates import days_ago
 from datetime import datetime, timedelta
 
@@ -21,6 +22,9 @@ def _downloading_data(**kwargs):
 # def _downloading_data(my_param, ds):
 #     print(my_param)
 
+def _checking_data():
+    print('check data')
+
 with DAG(dag_id='simple_dag', schedule_interval="@daily", 
         start_date=days_ago(3), catchup=False) as dag:
 
@@ -28,6 +32,11 @@ with DAG(dag_id='simple_dag', schedule_interval="@daily",
         task_id='downloading_data',
         python_callable=_downloading_data,
         # op_kwargs={'my_param': 42}
+    )
+
+    checking_data = PythonOperator(
+        task_id='checking_data',
+        python_callable=_checking_data
     )
 
     waiting_for_data = FileSensor(
@@ -44,4 +53,7 @@ with DAG(dag_id='simple_dag', schedule_interval="@daily",
 
     # downloading_data.set_downstream(waiting_for_data)
     # waiting_for_data.set_downstream(processing_data)
-    downloading_data >> waiting_for_data >> processing_data
+    # downloading_data >> waiting_for_data >> processing_data
+    # downloading_data >> [waiting_for_data, processing_data]
+    chain(downloading_data, waiting_for_data, processing_data)
+    # cross_downstream([downloading_data, checking_data],[waiting_for_data, processing_data])
